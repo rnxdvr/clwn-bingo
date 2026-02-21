@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>clwn | unluckyghost — Бинго</title>
+  <style>
+    :root {
+      --bg: #0d0015;
+      --cell-bg: #1a0d24;
+      --border: #4a1a5e;
+      --accent: #ff66cc;
+      --accent-glow: #ff99dd;
+      --marked-bg: #2a004d;
+      --marked-border: #c71585;
+      --marked-text: #ffb3e6;
+      --text: #e0c3ff;
+      --subtext: #b399cc;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0.8rem 0.8rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .top-info {
+      text-align: center;
+      margin-bottom: 1.2rem;
+      width: 100%;
+    }
+
+    .copyright {
+      color: var(--subtext);
+      font-size: 0.82rem;
+      text-shadow: 
+        0 0 4px rgba(255,102,204,0.3),
+        0 0 8px rgba(255,102,204,0.15);
+      margin-bottom: 0.3rem;
+    }
+
+    .credits {
+      color: #ff99dd;
+      font-size: 0.9rem;
+      font-style: italic;
+      text-shadow: 0 0 6px rgba(255,102,204,0.5);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      color: var(--accent);
+      font-size: clamp(2.2rem, 7vw, 3.6rem);
+      letter-spacing: 3px;
+      margin-bottom: 0.2rem;
+      text-shadow: 
+        0 0 6px var(--accent-glow),
+        0 0 12px rgba(255,102,204,0.4);
+    }
+
+    .subtitle {
+      color: var(--subtext);
+      font-size: 1.1rem;
+      margin-bottom: 1.3rem;
+      text-shadow: 
+        0 0 4px rgba(255,102,204,0.4),
+        0 0 8px rgba(255,102,204,0.2);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 6px;
+      width: 100%;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      background: var(--cell-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      padding: 4px 3px;
+      font-size: clamp(10.5px, 2.0vw, 12.5px);
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.14s ease;
+      line-height: 1.25;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell:hover {
+      background: #2a1a3a;
+      border-color: #ff66cc;
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(255,102,204,0.45);
+    }
+
+    .cell.marked {
+      background: var(--marked-bg);
+      border-color: var(--marked-border);
+      color: var(--marked-text);
+    }
+
+    .cell.marked::before {
+      content: "🤡";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 7em;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 1;
+      transform: scale(0.95);
+      line-height: 1;
+    }
+
+    .cell.custom {
+      border-color: #ff66cc;
+      box-shadow: 0 0 10px rgba(255,102,204,0.35);
+    }
+
+    .cell .delete-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, #c71585, #ff66cc);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 2;
+      opacity: 0;
+      transform: scale(0.7);
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(199,21,133,0.6);
+    }
+
+    .cell:hover .delete-btn {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .cell .delete-btn:hover {
+      background: linear-gradient(135deg, #ff66cc, #ff99dd);
+      transform: scale(1.15);
+      box-shadow: 0 4px 12px rgba(255,102,204,0.7);
+    }
+
+    .add-cell {
+      aspect-ratio: 1 / 1;
+      background: rgba(74,26,94,0.3);
+      border: 1.5px dashed #c71585;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-cell:hover {
+      background: rgba(74,26,94,0.5);
+      border-color: #ff66cc;
+      box-shadow: 0 0 12px rgba(255,102,204,0.45);
+    }
+
+    .add-cell::before {
+      content: "+";
+      font-size: clamp(24px, 4vw, 32px);
+      color: var(--accent-glow);
+      opacity: 0.8;
+    }
+
+    .controls {
+      margin: 1.2rem 0;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: #2a004d;
+      color: #ffb3e6;
+      border: 1.5px solid #c71585;
+      padding: 0.7rem 1.4rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-shadow: 0 0 6px rgba(255,102,204,0.5);
+    }
+
+    button:hover {
+      background: #4a1a5e;
+      border-color: #ff66cc;
+      transform: translateY(-1px);
+      box-shadow: 0 0 12px rgba(255,102,204,0.5);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(13,0,21,0.92);
+      z-index: 1000;
+      place-items: center;
+    }
+
+    .modal-content {
+      background: #1a0d24;
+      border: 1.5px solid #c71585;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 460px;
+      padding: 1.6rem;
+      color: var(--text);
+      box-shadow: 0 0 25px rgba(199,21,133,0.4);
+    }
+
+    h2 { 
+      margin-bottom: 0.9rem; 
+      color: var(--accent); 
+      text-shadow: 0 0 8px rgba(255,102,204,0.6);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      background: #0d0015;
+      color: #e0c3ff;
+      border: 1.5px solid #4a1a5e;
+      border-radius: 8px;
+      padding: 0.9rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: vertical;
+      margin: 0.8rem 0;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    .modal-buttons button {
+      background: #2a004d;
+      color: #ffb3e6;
+      border: 1.5px solid #c71585;
+    }
+
+    .modal-buttons button:hover {
+      background: #4a1a5e;
+      border-color: #ff66cc;
+      box-shadow: 0 0 12px rgba(255,102,204,0.5);
+    }
+
+    @media (max-width: 700px) {
+      .grid { gap: 5px; }
+      .cell { padding: 3px; font-size: clamp(10px, 2.3vw, 12px); }
+      .cell.marked::before { font-size: 6em; }
+    }
+
+    @media (max-width: 500px) {
+      .grid { gap: 4px; }
+      .cell { padding: 3px; font-size: clamp(9.5px, 2.5vw, 11.5px); }
+      .cell.marked::before { font-size: 5em; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-info">
+  <div class="copyright">ACCE VIBECODES INC. — 2026. ALL RIGHTS RESERVED.</div>
+  <div class="credits">Tested by xddReTro, made with love to clwnsquad community</div>
+</div>
+
+<div class="container">
+  <h1>clwn | unluckyghost</h1>
+  <div class="subtitle">Бинго</div>
+
+  <div class="grid" id="bingo-grid"></div>
+
+  <div class="controls">
+    <button onclick="clearBoard()">Сбросить</button>
+  </div>
+</div>
+
+<div class="modal" id="addModal">
+  <div class="modal-content">
+    <h2>Свои фразы</h2>
+    <p>По одной на строку</p>
+    <textarea id="customPhrases"></textarea>
+    <div class="modal-buttons">
+      <button onclick="closeModal()">Отмена</button>
+      <button onclick="addCustomCells()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const defaultPhrases = [
+  "КОРСА УМЕРЛА","Я/МЫ ПИНГУЕМ","КОЛОННА НЕ СОБИРАЕТСЯ","0 ФПС","БОЛИТ СПИНА",
+  "БОЛИТ НОГА","ТАРАН ТРАФИКА","ОВЕРСТИРЫ","АНДЕРСТИРЫ","ПОДДАЛСЯ","ОТВЛЕКСЯ",
+  "СЕГОДНЯ БЕЗ ПИВА","ХОТЛАПИТЬ ВЕЧНО","ЕБЛ4Н МОРГАЕТ СЗАДИ","НА СЕРВЕРЕ ТОЛЬКО ЕБЛ4НЫ",
+  "ДА БЛXТЬ ЧТО ЗА ХУIНЯ","ПОНЯТНО","ПРОВЕРЮ КОЛЛАЙДЕР","ЯБЛОЧНЫЙ ГАРИК",
+  "ЗАЛУПА НЕ ПОВОРАЧИВАЕТ","НЕ ПОПАЛ В ПЕРЕДАЧУ","ПЕДАЛЬ СКРИПИТ",
+  "НАДЕЮСЬ ТЕБЕ ОТОРВАЛО РУКИ ОТ ЭТОГО УДАРА","ЁБАНОЕ ВСЁ","РЕТРО ДРОЧИЛА"
+];
+
+let phrases = [...defaultPhrases];
+let marked = new Set();
+
+const grid = document.getElementById("bingo-grid");
+
+function updateGridLayout() {
+  const total = phrases.length;
+  let side = Math.max(5, Math.ceil(Math.sqrt(total)));
+
+  grid.style.gridTemplateColumns = `repeat(${side}, 1fr)`;
+  grid.style.gridTemplateRows = `repeat(${side}, auto)`;
+}
+
+function createCell(text, index, isAdd = false) {
+  const div = document.createElement("div");
+  div.className = isAdd ? "add-cell cell" : "cell";
+  if (!isAdd) {
+    div.textContent = text;
+    div.dataset.index = index;
+
+    if (marked.has(index)) div.classList.add("marked");
+
+    div.onclick = (e) => {
+      if (e.target.classList.contains("delete-btn")) return;
+      div.classList.toggle("marked");
+      if (div.classList.contains("marked")) marked.add(index);
+      else marked.delete(index);
+    };
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "delete-btn";
+    deleteBtn.textContent = "×";
+    deleteBtn.onclick = () => deleteCell(index);
+    div.appendChild(deleteBtn);
+  } else {
+    div.onclick = openAddModal;
+  }
+
+  if (!isAdd && !defaultPhrases.includes(text)) div.classList.add("custom");
+
+  return div;
+}
+
+function renderGrid() {
+  grid.innerHTML = "";
+  phrases.forEach((text, i) => grid.appendChild(createCell(text, i)));
+  grid.appendChild(createCell('', phrases.length, true));
+  updateGridLayout();
+}
+
+function deleteCell(index) {
+  const cell = document.querySelector(`.cell[data-index="${index}"]`);
+  if (cell) {
+    cell.classList.add("removing");
+    setTimeout(() => {
+      phrases.splice(index, 1);
+      marked.delete(index);
+      renderGrid();
+    }, 300);
+  }
+}
+
+function clearBoard() {
+  marked.clear();
+  document.querySelectorAll(".cell").forEach(el => el.classList.remove("marked"));
+}
+
+function openAddModal() {
+  document.getElementById("addModal").style.display = "grid";
+}
+
+function closeModal() {
+  document.getElementById("addModal").style.display = "none";
+}
+
+function addCustomCells() {
+  const textarea = document.getElementById("customPhrases");
+  const lines = textarea.value.trim().split("\n").filter(l => l.trim());
+
+  if (lines.length) {
+    phrases.push(...lines);
+    renderGrid();
+  }
+
+  closeModal();
+  textarea.value = "";
+}
+
+renderGrid();
+</script>
+</body>
+</html>
